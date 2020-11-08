@@ -1,11 +1,11 @@
 
 import time
-from tokenise import time_elapsed
-import tensorflow as tf
-from nltk import edit_distance as ed
-import numpy as np
 import pickle
 from preprocess_data import load_conllu, rem_dubspace, map_chars, load_data
+from tokenise import time_elapsed
+from nltk import edit_distance as ed
+import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
@@ -75,6 +75,8 @@ def test_tzmod(model, mapping, size_vocab, buffer=0):
     avg_edist = sum(edit_dists) / len(edit_dists)
     return avg_edist
 
+
+# Test Area
 
 if __name__ == "__main__":
 

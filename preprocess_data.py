@@ -1,11 +1,9 @@
 
 import pickle
-from PrepareHandContent import remove_non_glosses
+from conllu import parse
 from functools import reduce
 import numpy as np
 from tensorflow.keras.utils import to_categorical
-from conllu import parse
-from tensorflow.keras.backend import shape
 
 
 def remove_ogham(glosslist):
@@ -25,6 +23,33 @@ def remove_chars(glosslist):
             if odd_char in gloss:
                 glosslist[g] = "".join(gloss.split(odd_char))
     return glosslist
+
+
+def tokenisegloss(gloss):
+    glosstoks = gloss.split(" ")
+    return glosstoks
+
+
+def remove_non_glosses(gloss_list):
+    """Removes glosses from a list of pre-cleaned if they are comprised only of non-Old-Irish tokens"""
+    new_glosslist = []
+    faultlist = [".i.", "rl.", "ɫ.", "⁊", "*Latin*", ""]
+    faultcount = 0
+    for gloss in gloss_list:
+        if gloss not in faultlist:
+            glossfault = True
+            for glosstok in tokenisegloss(gloss):
+                if glosstok not in faultlist:
+                    glossfault = False
+                    break
+            if glossfault:
+                faultcount += 1
+            else:
+                new_glosslist.append(gloss)
+        else:
+            faultcount += 1
+    # print(faultcount)
+    return new_glosslist
 
 
 def load_conllu(conllu_file):

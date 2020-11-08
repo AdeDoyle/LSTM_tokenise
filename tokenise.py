@@ -46,9 +46,11 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
                           verbose=2, callbacks=[tb, es])
                 print("Model {} created".format(NAME))
                 # Save Model
-                model.save(NAME)
+                model.save(f"models\{NAME}")
                 print("Model {} saved".format(NAME))
 
+
+# Test Area
 
 if __name__ == "__main__":
 
