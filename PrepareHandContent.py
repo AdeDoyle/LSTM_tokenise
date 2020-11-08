@@ -97,7 +97,7 @@ def tokenisegloss(gloss):
 def remove_non_glosses(gloss_list):
     """Removes glosses from a list of pre-cleaned if they are comprised only of non-Old-Irish tokens"""
     new_glosslist = []
-    faultlist = [".i.", "rl.", "ɫ.", "*Latin*", ""]
+    faultlist = [".i.", "rl.", "ɫ.", "⁊", "*Latin*", ""]
     faultcount = 0
     for gloss in gloss_list:
         if gloss not in faultlist:
@@ -122,7 +122,7 @@ def compile_tokenised_glosslist(file):
        returns a tokenised list of lists (glosses and their tokens) for each acceptable gloss"""
     tokenised_handlist = []
     # removes glosses just comprised of non-Old-Irish tokens
-    faultlist = [".i.", "rl.", "ɫ.", "*Latin*", ""]
+    faultlist = [".i.", "rl.", "ɫ.", "⁊", "*Latin*", ""]
     faultcount = 0
     for gloss in splitglosses(file):
         if cleangloss(gloss) not in faultlist:

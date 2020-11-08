@@ -4,6 +4,52 @@ from PrepareHandContent import remove_non_glosses
 from functools import reduce
 import numpy as np
 from tensorflow.keras.utils import to_categorical
+from conllu import parse
+from tensorflow.keras.backend import shape
+
+
+def remove_ogham(glosslist):
+    ogham_chars = ['ᚂ', 'ᚃ', 'ᚄ', 'ᚅ', 'ᚆ', 'ᚈ', 'ᚉ', 'ᚋ', 'ᚏ', 'ᚐ', 'ᚑ', 'ᚓ', 'ᚔ', 'ᚙ', '᚛']
+    cleaned_list = list()
+    for gloss in glosslist:
+        ogham = [letter for letter in ogham_chars if (letter in gloss)]
+        if not ogham:
+            cleaned_list.append(gloss)
+    return cleaned_list
+
+
+def remove_chars(glosslist):
+    unexpected_chars = [',', '̃', '֊']
+    for odd_char in unexpected_chars:
+        for g, gloss in enumerate(glosslist):
+            if odd_char in gloss:
+                glosslist[g] = "".join(gloss.split(odd_char))
+    return glosslist
+
+
+def load_conllu(conllu_file):
+    with open(conllu_file, 'r', encoding="utf-8") as conllu_data:
+        sentences = parse(conllu_data.read())
+    gloss_list = list()
+    for sent in sentences:
+        amended_sent = False
+        for tok_data in sent:
+            tok_pos = tok_data.get("upos")
+            if tok_pos == "X":
+                token = "*Latin*"
+            else:
+                token = tok_data.get("form")
+            if amended_sent:
+                 amended_sent += f" {token}"
+            else:
+                amended_sent = token
+        while "*Latin* *Latin*" in amended_sent:
+            amended_sent = "*Latin*".join(amended_sent.split("*Latin* *Latin*"))
+        gloss_list.append(amended_sent)
+    gloss_list = remove_non_glosses(gloss_list)
+    gloss_list = remove_ogham(gloss_list)
+    gloss_list = remove_chars(gloss_list)
+    return gloss_list
 
 
 def rem_dubspace(text):
@@ -80,19 +126,16 @@ def onehot_split(sequences, vocab_size, text_name):
 if __name__ == "__main__":
 
     # # Choose and name text to train on
-    text_name = "Wb. Training Glosses"
-    text_designation = "Wb"
-    one_text = [" ".join(pickle.load(open("toktrain.pkl", "rb")))]
-    # text_name = "Sg. Training Glosses"
-    # text_designation = "Sg"
-    # one_text = [rem_dubspace(" ".join((get_text("SGG")).split("\n")))]
+    # text_name = "Wb. Training Glosses"
+    # text_designation = "Wb"
+    # one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+    text_name = "Sg. Training Glosses"
+    text_designation = "Sg"
+    one_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
 
     # # Map all test and training characters
     mappings = map_chars(load_data(one_text, text_name))
     char_dict, rchardict, size_vocab = mappings[0], mappings[1], mappings[2]
-
-    # # Save the mapping
-    # pickle.dump(char_dict, open(f'char_mapping_{text_designation}.pkl', 'wb'))  # Name mapping
 
     # # Set how many characters the model should look at before predicting an upcoming character
     buffer_characters = 10
