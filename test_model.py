@@ -64,7 +64,6 @@ def test_tzmod(model, mapping, size_vocab, buffer=0):
         count += 1
         x = x_test[x_pos]
         y = y_test[x_pos]
-        print(y)
         x_toks = tokenise(model, x, mapping, size_vocab, buffer)
         e_dist = ed(y, x_toks)
         edit_dists.append(e_dist)
@@ -82,7 +81,7 @@ if __name__ == "__main__":
 
     # Check for GPU and enable memory growth as necessary
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
-    print("Num GPUs Available: ", len(physical_devices))
+    print(f"Num GPUs Available: {len(physical_devices)}")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # Load test data
@@ -91,24 +90,41 @@ if __name__ == "__main__":
     x_test, y_test = test_set[0], test_set[1]
 
     # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
+
     text_name_1 = "Wb. Training Glosses"
     text_designation_1 = "Wb"
-    one_text = [" ".join(pickle.load(open("toktrain.pkl", "rb")))]
+    one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
     mapping_1 = map_chars(load_data(one_text, text_name_1))
-    model_1 = "Wb-model, 2 layer(s) of 25 LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
+    model_1 = "models\\Wb-model, 2 layer(s) of 75 LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
     char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
 
     text_name_2 = "Sg. Training Glosses"
     text_designation_2 = "Sg"
     two_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
     mapping_2 = map_chars(load_data(two_text, text_name_2))
-    model_2 = "Sg-model, 2 layer(s) of 25 LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
+    model_2 = "models\\Sg-model, 2 layer(s) of 50 LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
     char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
 
     allmods = [
         [model_1, char_dict_1, size_vocab_1],
         [model_2, char_dict_2, size_vocab_2]
     ]
+
+    # allmods = list()
+    # for designation in ["Wb", "Sg"]:
+    #     text_name = False
+    #     text = False
+    #     if designation == "Wb":
+    #         text_name = "Wb. Training Glosses"
+    #         text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+    #     elif designation == "Sg":
+    #         text_name = "Sg. Training Glosses"
+    #         text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+    #     mapping = map_chars(load_data(text, text_name))
+    #     char_dict, size_vocab = mapping[0], mapping[2]
+    #     for nodes in ["25", "50", "60", "75"]:
+    #         model = f"models\\{designation}-model, 2 layer(s) of {nodes} LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
+    #         allmods.append([model, char_dict, size_vocab])
 
     # Test Manually Tokenised Glosses against Untokenised Glosses
     all_ed_dists = []

@@ -1,10 +1,10 @@
 
 import time
 import pickle
-from preprocess_data import load_conllu, rem_dubspace, map_chars, load_data, sequence, encode, onehot_split
+from preprocess_data import load_conllu, map_chars, load_data, sequence, encode, onehot_split
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Activation, Dense, LSTM
+from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.python.keras.callbacks import TensorBoard, EarlyStopping
 
 
@@ -64,19 +64,19 @@ if __name__ == "__main__":
 
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
-    # one_text = [" ".join(pickle.load(open("toktrain.pkl", "rb")))]
+    # gloss_list = pickle.load(open("toktrain.pkl", "rb"))
     text_name = "Sg. Training Glosses"
     text_designation = "Sg"
-    one_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+    gloss_list = load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')
 
-    mappings = map_chars(load_data(one_text, text_name))
-    char_dict, rchardict, vocab_size = mappings[0], mappings[1], mappings[2]
+    mappings = map_chars(load_data(gloss_list, text_name))
+    char_dict, rchardict, size_vocab = mappings[0], mappings[1], mappings[2]
 
     buffer_characters = 10
 
-    x_train = sequence(one_text, buffer_characters, text_name)
+    x_train = sequence(gloss_list, buffer_characters, text_name)
     x_train = encode(x_train, char_dict, text_name)
-    one_hots = onehot_split(x_train, vocab_size, text_name)
+    one_hots = onehot_split(x_train, size_vocab, text_name)
     x_train, y_train = one_hots[0], one_hots[1]
     val_size = 0.1
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size, x_train, y_train,
+    makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, size_vocab, x_train, y_train,
             val_size, Epochs, Batches)
 
     end_time = time.time()
