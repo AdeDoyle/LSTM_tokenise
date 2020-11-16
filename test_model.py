@@ -68,8 +68,8 @@ def test_tzmod(model, mapping, size_vocab, buffer=0):
         e_dist = ed(y, x_toks)
         edit_dists.append(e_dist)
         # print(x)
-        # print(x_toks)
         # print(y)
+        # print(x_toks)
         # print("Gloss {}/41: Edit Distance = {}".format(str(count), str(e_dist)))
     avg_edist = sum(edit_dists) / len(edit_dists)
     return avg_edist

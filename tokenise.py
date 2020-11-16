@@ -54,10 +54,10 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
 
 if __name__ == "__main__":
 
-    # Test GPU is recognised
+    # Test GPU is recognised and enable memory growth as necessary
 
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
-    print("Num GPUs Available: ", len(physical_devices))
+    print(f"Num GPUs Available: {len(physical_devices)}")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
      # Set Parameters
