@@ -83,9 +83,9 @@ if __name__ == "__main__":
     val_size = 0.1
 
     LSTM_layers = [2]
-    LSTM_sizes = [25]
+    LSTM_sizes = [25, 50, 75, 100]
     Dense_layers = [1]
-    Epochs = 100
+    Epochs = 250
     Batches = False
 
 
