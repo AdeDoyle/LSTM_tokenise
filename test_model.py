@@ -5,6 +5,8 @@ from preprocess_data import load_conllu, rem_dubspace, map_chars, load_data
 from tokenise import time_elapsed
 from nltk import edit_distance as ed
 import numpy as np
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences

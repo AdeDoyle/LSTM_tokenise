@@ -3,6 +3,8 @@ import pickle
 from conllu import parse
 from functools import reduce
 import numpy as np
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 from preprocess_data import remove_ogham, remove_chars, rem_dubspace, remove_non_glosses, add_finalspace
@@ -77,7 +79,7 @@ def sequence(string_list, buffer_len, text_name):
        Returns the forward sequence, reverse sequence, and character"""
     sequences = list()
     for string in string_list:
-        one_liner = ("$" * buffer_len) + string + ("$" * buffer_len)
+        one_liner = ("$" * buffer_len) + rem_dubspace(string) + ("$" * buffer_len)
         for i in range(buffer_len, len(one_liner) - buffer_len):
             # select sequence of tokens
             seq = one_liner[i - buffer_len: i]
@@ -88,7 +90,7 @@ def sequence(string_list, buffer_len, text_name):
             # store this seq
             sequences.append([seq, rseq, char])
     print(f"Buffer length set to: {buffer_len}")
-    print(f"{text_name} organised into {len(sequences)} sequences:")
+    print(f"{text_name} organised into {len(sequences)} sequences")
     return sequences
 
 
@@ -109,15 +111,10 @@ def onehot_split(num_lists, vocab_size, text_name):
     """Turns numerically encoded sequences into a numpy array
        Splits arrays into x_train and y_train
        One hot encodes x_train and y_train"""
-    seqs = np.array([i[0] for i in num_lists])
-    rev_seqs = np.array([i[1] for i in num_lists])
-    tensors = [[to_categorical(seqs[i], num_classes=vocab_size),
-                to_categorical(rev_seqs[i], num_classes=vocab_size)]
-               for i, _ in enumerate(num_lists)]
-    x_train = tf.constant(tensors)
-    y_train = tf.constant([i[2] for i in num_lists])
-    y_train = to_categorical(y_train, num_classes=vocab_size)
-    print(f"{text_name} One-Hot encoded")
+    sequences = [to_categorical(x, num_classes=vocab_size) for x in np.array([i[0] + i[1] for i in num_lists])]
+    x_train = np.array(sequences)
+    y_train = to_categorical([i[2][0] for i in num_lists], num_classes=vocab_size)
+    print(f"{text_name} One-Hot encoded:\n    x-train = {x_train.shape}\n    y-train = {y_train.shape}")
     return [x_train, y_train]
 
 

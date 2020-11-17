@@ -3,6 +3,8 @@ import pickle
 from conllu import parse
 from functools import reduce
 import numpy as np
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow.keras.utils import to_categorical
 
 
@@ -103,9 +105,9 @@ def load_conllu(conllu_file):
 
 def load_data(training_text, training_text_name):
     """Load and combine all text data for training and testing the model"""
-    x_train = remove_non_glosses(pickle.load(open("toktrain.pkl", "rb")))
+    x_train = remove_chars(remove_non_glosses(pickle.load(open("toktrain.pkl", "rb"))))
     test_set = pickle.load(open("toktest.pkl", "rb"))
-    x_test, y_test = test_set[0], test_set[1]
+    x_test, y_test = remove_chars(remove_non_glosses(test_set[0])), remove_chars(remove_non_glosses(test_set[1]))
     print(f"{training_text_name} loaded\nWb. Test Glosses loaded")
     return [training_text, x_train, x_test, y_test]
 
@@ -127,7 +129,7 @@ def map_chars(texts_list):
 def sequence(string_list, buffer_len, text_name):
     """Organises gloss content into sequences"""
     one_liner = rem_dubspace(" ".join(string_list))
-    one_liner = ("$" * buffer_len) + one_liner
+    one_liner = ("$" * buffer_len) + one_liner + " "
     sequences = list()
     for i in range(buffer_len, len(one_liner)):
         # select sequence of tokens
@@ -135,7 +137,7 @@ def sequence(string_list, buffer_len, text_name):
         # store this seq
         sequences.append(seq)
     print(f"Buffer length set to: {buffer_len}")
-    print(f"{text_name} organised into {len(sequences)} sequences:")
+    print(f"{text_name} organised into {len(sequences)} sequences")
     return sequences
 
 
@@ -158,7 +160,7 @@ def onehot_split(sequences, vocab_size, text_name):
     sequences = [to_categorical(x, num_classes=vocab_size) for x in x_train]
     x_train = np.array(sequences)
     y_train = to_categorical(y_train, num_classes=vocab_size)
-    print("{} One-Hot encoded".format(text_name))
+    print(f"{text_name} One-Hot encoded:\n    x-train = {x_train.shape}\n    y-train = {y_train.shape}")
     return [x_train, y_train]
 
 
