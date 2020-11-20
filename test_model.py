@@ -15,7 +15,6 @@ from tensorflow.keras.utils import to_categorical
 
 def tokenise(model, intext, mapping, size_vocab, buffer=0):
     """Takes a trained language model and a text, returns the text tokenised as per the language model"""
-    mod = load_model(model)
     buffer_text = buffer * "$"
     text = buffer_text + intext
     outlist = []
@@ -34,7 +33,7 @@ def tokenise(model, intext, mapping, size_vocab, buffer=0):
         encoded = [mapping[char] for char in text_chunk]
         encoded = pad_sequences([encoded], maxlen=buffer, truncating='pre')
         encoded = np.array(to_categorical(encoded, num_classes=size_vocab))
-        pred = mod.predict_classes(encoded, verbose=0)[0]
+        pred = model.predict_classes(encoded, verbose=0)[0]
         # if the letter were trying to predict isn't a space in the text
         # predict a character
         if let != " ":
@@ -63,11 +62,12 @@ def test_tzmod(model, mapping, test_set, size_vocab, buffer=0):
     edit_dists = []
     count = 0
     x_test, y_test = test_set[0], test_set[1]
+    mod = load_model(model)
     for x_pos in range(len(x_test)):
         count += 1
         x = x_test[x_pos]
         y = y_test[x_pos]
-        x_toks = tokenise(model, x, mapping, size_vocab, buffer)
+        x_toks = tokenise(mod, x, mapping, size_vocab, buffer)
         e_dist = ed(y, x_toks)
         edit_dists.append(e_dist)
         # print(x)
@@ -90,45 +90,45 @@ if __name__ == "__main__":
     # Load test data
     test_in = open("toktest.pkl", "rb")
     test_set = pickle.load(test_in)
-    x_test, y_test = test_set[0], [gl + " " for gl in test_set[1]]
+    x_test, y_test = test_set[0], test_set[1]
     x_and_y_test = [x_test, y_test]
 
     # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
 
-    text_name_1 = "Wb. Training Glosses"
-    text_designation_1 = "Wb"
-    one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
-    mapping_1 = map_chars(load_data(one_text, text_name_1))
-    model_1 = "models\\Wb-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-    char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
+    # text_name_1 = "Wb. Training Glosses"
+    # text_designation_1 = "Wb"
+    # one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+    # mapping_1 = map_chars(load_data(one_text, text_name_1))
+    # model_1 = "models\\Wb-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    # char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
+    #
+    # text_name_2 = "Sg. Training Glosses"
+    # text_designation_2 = "Sg"
+    # two_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+    # mapping_2 = map_chars(load_data(two_text, text_name_2))
+    # model_2 = "models\\Sg-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    # char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
+    #
+    # allmods = [
+    #     [model_1, char_dict_1, size_vocab_1],
+    #     [model_2, char_dict_2, size_vocab_2]
+    # ]
 
-    text_name_2 = "Sg. Training Glosses"
-    text_designation_2 = "Sg"
-    two_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
-    mapping_2 = map_chars(load_data(two_text, text_name_2))
-    model_2 = "models\\Sg-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-    char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
-
-    allmods = [
-        [model_1, char_dict_1, size_vocab_1],
-        [model_2, char_dict_2, size_vocab_2]
-    ]
-
-    # allmods = list()
-    # for designation in ["Wb", "Sg"]:
-    #     text_name = False
-    #     text = False
-    #     if designation == "Wb":
-    #         text_name = "Wb. Training Glosses"
-    #         text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
-    #     elif designation == "Sg":
-    #         text_name = "Sg. Training Glosses"
-    #         text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
-    #     mapping = map_chars(load_data(text, text_name))
-    #     char_dict, size_vocab = mapping[0], mapping[2]
-    #     for nodes in ["25", "50", "75", "100"]:
-    #         model = f"models\\{designation}-model, 2 layer(s) of {nodes} LSTM Nodes, 1 Dense, 100 Ep, No Bat, 10.0% Val"
-    #         allmods.append([model, char_dict, size_vocab])
+    allmods = list()
+    for designation in ["Wb", "Sg"]:
+        text_name = False
+        text = False
+        if designation == "Wb":
+            text_name = "Wb. Training Glosses"
+            text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+        elif designation == "Sg":
+            text_name = "Sg. Training Glosses"
+            text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+        mapping = map_chars(load_data(text, text_name))
+        char_dict, size_vocab = mapping[0], mapping[2]
+        for nodes in ["25", "50", "75", "100"]:
+            model = f"models\\{designation}-model, 2 layer(s) of {nodes} LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+            allmods.append([model, char_dict, size_vocab])
 
     # Test Manually Tokenised Glosses against Untokenised Glosses
     all_ed_dists = []

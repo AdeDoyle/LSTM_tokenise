@@ -1,7 +1,8 @@
 
 import time
 import pickle
-from preprocess_dual import load_conllu, map_chars, load_data, sequence, encode, onehot_split
+from preprocess_data import remove_chars, remove_non_glosses, add_finalspace
+from preprocess_dual import load_conllu, map_chars, load_data, sequence, encode, onehot_split, split_on_latin
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
@@ -66,10 +67,12 @@ if __name__ == "__main__":
 
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
-    # gloss_list = pickle.load(open("toktrain.pkl", "rb"))
+    # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     pickle.load(open("toktrain.pkl", "rb"))))))
     text_name = "Sg. Training Glosses"
     text_designation = "Sg"
-    gloss_list = load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')
+    gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
 
     mappings = map_chars(load_data(gloss_list, text_name))
     char_dict, rchardict, size_vocab = mappings[0], mappings[1], mappings[2]

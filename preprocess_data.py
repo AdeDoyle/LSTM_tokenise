@@ -47,7 +47,6 @@ def add_finalspace(glosslist):
             gloss = gloss.strip()
             gloss += " "
             spaced_list.append(gloss)
-            raise RuntimeError("Unexpected gloss-final space character")
     return spaced_list
 
 

@@ -127,13 +127,15 @@ if __name__ == "__main__":
     print(f"Num GPUs Available: {len(physical_devices)}")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-    # # Choose and name text to train on
+    # Choose and name text to train on
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
-    # gloss_list = pickle.load(open("toktrain.pkl", "rb"))
+    # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     pickle.load(open("toktrain.pkl", "rb"))))))
     text_name = "Sg. Training Glosses"
     text_designation = "Sg"
-    gloss_list = load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')
+    gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
 
     # Map all test and training characters
     mappings = map_chars(load_data(gloss_list, text_name))
