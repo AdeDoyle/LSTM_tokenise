@@ -41,7 +41,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
                 model.add(Dense(vocab_size, activation='softmax'))
                 print(model.summary())
                 # Log the model
-                tb = TensorBoard(log_dir=f"dual_logs\{NAME}")
+                tb = TensorBoard(log_dir=f"logs\dual_logs\{NAME}")
                 # Compile model
                 model.compile(loss=loss_type, optimizer=opt, metrics=["accuracy"])
                 es = EarlyStopping(monitor='val_loss', patience=10, verbose=1, restore_best_weights=True)
@@ -49,7 +49,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
                           verbose=2, callbacks=[tb, es])
                 print("Model {} created".format(NAME))
                 # Save Model
-                model.save(f"dual_models\{NAME}")
+                model.save(f"models\dual_models\{NAME}")
                 print("Model {} saved".format(NAME))
 
 
@@ -103,4 +103,4 @@ if __name__ == "__main__":
     seconds_elapsed = end_time - start_time
     print("Time elapsed: " + time_elapsed(seconds_elapsed))
 
-# *Terminal*>tensorboard --logdir=dual_logs\
+# *Terminal*>tensorboard --logdir=logs\dual_logs\

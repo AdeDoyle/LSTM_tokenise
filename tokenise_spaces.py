@@ -1,7 +1,8 @@
 
 import time
 import pickle
-from preprocess_data import load_conllu, map_chars, load_data, sequence, encode, onehot_split
+from preprocess_data import remove_chars, remove_non_glosses, add_finalspace
+from preprocess_spaces import load_conllu, map_chars, load_data, sequence, encode, onehot_split, split_on_latin
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
@@ -28,7 +29,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
     for lstmlayer in LSTM_layers:
         for lstmsize in LSTM_sizes:
             for denselayer in Dense_layers:
-                NAME = f"{text_designation}-model, {lstmlayer} layer(s) of {lstmsize} LSTM Nodes, " \
+                NAME = f"{text_designation}-spaces, {lstmlayer} layer(s) of {lstmsize} LSTM Nodes, " \
                        f"{denselayer} Dense, {num_epochs} Ep, {batch_size} Bat, " \
                        f"{val_size*100}% Val"
                 model = Sequential()
@@ -40,7 +41,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
                 model.add(Dense(vocab_size, activation='softmax'))
                 print(model.summary())
                 # Log the model
-                tb = TensorBoard(log_dir=f"logs\logs\{NAME}")
+                tb = TensorBoard(log_dir=f"logs\space_logs\{NAME}")
                 # Compile model
                 model.compile(loss=loss_type, optimizer=opt, metrics=["accuracy"])
                 es = EarlyStopping(monitor='val_loss', patience=10, verbose=1, restore_best_weights=True)
@@ -48,7 +49,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
                           verbose=2, callbacks=[tb, es])
                 print("Model {} created".format(NAME))
                 # Save Model
-                model.save(f"models\models\{NAME}")
+                model.save(f"models\space_models\{NAME}")
                 print("Model {} saved".format(NAME))
 
 
@@ -66,10 +67,12 @@ if __name__ == "__main__":
 
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
-    # gloss_list = pickle.load(open("toktrain.pkl", "rb"))
+    # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     pickle.load(open("toktrain.pkl", "rb"))))))
     text_name = "Sg. Training Glosses"
     text_designation = "Sg"
-    gloss_list = load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')
+    gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
 
     mappings = map_chars(load_data(gloss_list, text_name))
     char_dict, rchardict, size_vocab = mappings[0], mappings[1], mappings[2]
@@ -100,4 +103,4 @@ if __name__ == "__main__":
     seconds_elapsed = end_time - start_time
     print("Time elapsed: " + time_elapsed(seconds_elapsed))
 
-# *Terminal*>tensorboard --logdir=logs\logs\
+# *Terminal*>tensorboard --logdir=logs\space_logs\
