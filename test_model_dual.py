@@ -107,7 +107,7 @@ if __name__ == "__main__":
     one_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
         pickle.load(open("toktrain.pkl", "rb"))))))))]
     mapping_1 = map_chars(load_data(one_text, text_name_1))
-    model_1 = "dual_models\\Wb-dual, 2 layer(s) of 75 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    model_1 = "models\\dual_models\\Wb-dual, 2 layer(s) of 75 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
     char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
 
     text_name_2 = "Sg. Training Glosses"
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     two_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
         load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
     mapping_2 = map_chars(load_data(two_text, text_name_2))
-    model_2 = "dual_models\\Sg-dual, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    model_2 = "models\\dual_models\\Sg-dual, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
     char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
 
     allmods = [
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     #     mapping = map_chars(load_data(text, text_name))
     #     char_dict, size_vocab = mapping[0], mapping[2]
     #     for nodes in ["25", "50", "75", "100"]:
-    #         model = f"dual_models\\{designation}-dual, 2 layer(s) of {nodes} " \
+    #         model = f"models\\dual_models\\{designation}-dual, 2 layer(s) of {nodes} " \
     #                 f"LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
     #         allmods.append([model, char_dict, size_vocab])
 

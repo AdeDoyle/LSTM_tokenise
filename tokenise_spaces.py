@@ -29,7 +29,7 @@ def makemod(LSTM_layers, LSTM_sizes, Dense_layers, text_designation, vocab_size,
     for lstmlayer in LSTM_layers:
         for lstmsize in LSTM_sizes:
             for denselayer in Dense_layers:
-                NAME = f"{text_designation}-spaces, {lstmlayer} layer(s) of {lstmsize} LSTM Nodes, " \
+                NAME = f"{text_designation}-spaces, {lstmlayer}x{lstmsize} LSTMs, " \
                        f"{denselayer} Dense, {num_epochs} Ep, {batch_size} Bat, " \
                        f"{val_size*100}% Val"
                 model = Sequential()

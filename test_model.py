@@ -95,40 +95,41 @@ if __name__ == "__main__":
 
     # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
 
-    # text_name_1 = "Wb. Training Glosses"
-    # text_designation_1 = "Wb"
-    # one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
-    # mapping_1 = map_chars(load_data(one_text, text_name_1))
-    # model_1 = "models\\Wb-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-    # char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
-    #
-    # text_name_2 = "Sg. Training Glosses"
-    # text_designation_2 = "Sg"
-    # two_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
-    # mapping_2 = map_chars(load_data(two_text, text_name_2))
-    # model_2 = "models\\Sg-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-    # char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
-    #
-    # allmods = [
-    #     [model_1, char_dict_1, size_vocab_1],
-    #     [model_2, char_dict_2, size_vocab_2]
-    # ]
+    text_name_1 = "Wb. Training Glosses"
+    text_designation_1 = "Wb"
+    one_text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+    mapping_1 = map_chars(load_data(one_text, text_name_1))
+    model_1 = "models\\models\\Wb-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
 
-    allmods = list()
-    for designation in ["Wb", "Sg"]:
-        text_name = False
-        text = False
-        if designation == "Wb":
-            text_name = "Wb. Training Glosses"
-            text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
-        elif designation == "Sg":
-            text_name = "Sg. Training Glosses"
-            text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
-        mapping = map_chars(load_data(text, text_name))
-        char_dict, size_vocab = mapping[0], mapping[2]
-        for nodes in ["25", "50", "75", "100"]:
-            model = f"models\\{designation}-model, 2 layer(s) of {nodes} LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-            allmods.append([model, char_dict, size_vocab])
+    text_name_2 = "Sg. Training Glosses"
+    text_designation_2 = "Sg"
+    two_text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+    mapping_2 = map_chars(load_data(two_text, text_name_2))
+    model_2 = "models\\models\\Sg-model, 2 layer(s) of 100 LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
+
+    allmods = [
+        [model_1, char_dict_1, size_vocab_1],
+        [model_2, char_dict_2, size_vocab_2]
+    ]
+
+    # allmods = list()
+    # for designation in ["Wb", "Sg"]:
+    #     text_name = False
+    #     text = False
+    #     if designation == "Wb":
+    #         text_name = "Wb. Training Glosses"
+    #         text = [rem_dubspace(" ".join(pickle.load(open("toktrain.pkl", "rb"))))]
+    #     elif designation == "Sg":
+    #         text_name = "Sg. Training Glosses"
+    #         text = [rem_dubspace(" ".join(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))]
+    #     mapping = map_chars(load_data(text, text_name))
+    #     char_dict, size_vocab = mapping[0], mapping[2]
+    #     for nodes in ["25", "50", "75", "100"]:
+    #         model = f"models\\models\\{designation}-model, 2 layer(s) of {nodes} " \
+    #                 f"LSTM Nodes, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    #         allmods.append([model, char_dict, size_vocab])
 
     # Test Manually Tokenised Glosses against Untokenised Glosses
     all_ed_dists = []
