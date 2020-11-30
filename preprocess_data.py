@@ -5,6 +5,7 @@ from functools import reduce
 import numpy as np
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow as tf
 from tensorflow.keras.utils import to_categorical
 
 
@@ -166,6 +167,11 @@ def onehot_split(sequences, vocab_size, text_name):
 # Test Area
 
 if __name__ == "__main__":
+
+    # Test GPU is recognised and enable memory growth as necessary
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    print(f"Num GPUs Available: {len(physical_devices)}")
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # # Choose and name text to train on
     # text_name = "Wb. Training Glosses"

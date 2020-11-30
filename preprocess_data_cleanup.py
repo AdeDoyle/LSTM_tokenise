@@ -75,45 +75,39 @@ def map_chars(texts_list):
 
 
 def sequence(string_list, buffer_len, text_name):
-    """Organises gloss content into forward and reverse sequences leading to the character to be identified
-       Returns the forward sequence, reverse sequence, and character"""
+    """Organises gloss content into sequences"""
+    one_liner = rem_dubspace(" ".join(string_list))
+    one_liner = ("$" * buffer_len) + one_liner + " "
     sequences = list()
-    for string in string_list:
-        one_liner = ("$" * buffer_len) + rem_dubspace(string) + ("$" * buffer_len)
-        for i in range(buffer_len, len(one_liner) - buffer_len):
-            # select sequence of tokens
-            seq = one_liner[i - buffer_len: i]
-            # select the reverse sequence of tokens
-            rseq = one_liner[i + 1: i + 1 + buffer_len][::-1]
-            # select the character to be guessed
-            char = one_liner[i]
-            # store this seq
-            sequences.append([seq, rseq, char])
+    for i in range(buffer_len, len(one_liner)):
+        # select sequence of tokens
+        seq = one_liner[i - buffer_len: i + 1]
+        # store this seq
+        sequences.append(seq)
     print(f"Buffer length set to: {buffer_len}")
     print(f"{text_name} organised into {len(sequences)} sequences")
     return sequences
 
 
-def encode(sequence_lists, chardict, text_name):
-    """Encodes a list of gloss sequences using mapping from letters to numbers"""
+def encode(string_list, chardict, text_name):
+    """Encodes a list of glosses using mapping"""
     num_list = list()
-    for seq_list in sequence_lists:
-        encoded_sequence = list()
-        for plain_string in seq_list:
-            encoded_string = [chardict[char] for char in plain_string]
-            encoded_sequence.append(encoded_string)
-        num_list.append(encoded_sequence)
+    for plain_string in string_list:
+        encoded_string = [chardict[char] for char in plain_string]
+        num_list.append(encoded_string)
     print(f"{text_name} numerically encoded")
     return num_list
 
 
-def onehot_split(num_lists, vocab_size, text_name):
-    """Turns numerically encoded sequences into a numpy array
+def onehot_split(sequences, vocab_size, text_name):
+    """Turns sequences into a numpy array
        Splits arrays into x_train and y_train
        One hot encodes x_train and y_train"""
-    sequences = [to_categorical(x, num_classes=vocab_size) for x in np.array([i[0] + i[1] for i in num_lists])]
+    sequences = np.array(sequences)
+    x_train, y_train = sequences[:, : - 1], sequences[:, - 1]
+    sequences = [to_categorical(x, num_classes=vocab_size) for x in x_train]
     x_train = np.array(sequences)
-    y_train = to_categorical([i[2][0] for i in num_lists], num_classes=vocab_size)
+    y_train = to_categorical(y_train, num_classes=vocab_size)
     print(f"{text_name} One-Hot encoded:\n    x-train = {x_train.shape}\n    y-train = {y_train.shape}")
     return [x_train, y_train]
 
@@ -136,6 +130,7 @@ if __name__ == "__main__":
     text_designation = "Sg"
     gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
         load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
+    check = add_finalspace(remove_chars(remove_non_glosses(load_conllu('sga_dipsgg-ud-test_combined_POS.conllu'))))
 
     # Map all test and training characters
     mappings = map_chars(load_data(gloss_list, text_name))

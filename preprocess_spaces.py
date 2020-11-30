@@ -128,7 +128,7 @@ if __name__ == "__main__":
     print(f"Num GPUs Available: {len(physical_devices)}")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-    # Choose and name text to train on
+    # # Choose and name text to train on
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
     # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
