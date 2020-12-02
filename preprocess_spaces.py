@@ -108,13 +108,19 @@ def encode(sequence_lists, chardict, text_name):
     return num_list
 
 
-def onehot_split(num_lists, vocab_size, text_name):
+def onehot_split(num_lists, vocab_size, text_name, binary_output=False, char_dict=None):
     """Turns numerically encoded sequences into a numpy array
        Splits arrays into x_train and y_train
        One hot encodes x_train and y_train"""
     sequences = [to_categorical(x, num_classes=vocab_size) for x in np.array([i[0] + i[1] for i in num_lists])]
     x_train = np.array(sequences)
-    y_train = to_categorical([i[2][0] for i in num_lists], num_classes=vocab_size)
+    y_train = [i[2][0] for i in num_lists]
+    if binary_output:
+        space_char = char_dict.get(" ")
+        y_train = np.array([0 if i != space_char else 1 for i in y_train])
+        y_train = to_categorical(y_train, num_classes=2)
+    else:
+        y_train = to_categorical(y_train, num_classes=vocab_size)
     print(f"{text_name} One-Hot encoded:\n    x-train = {x_train.shape}\n    y-train = {y_train.shape}")
     return [x_train, y_train]
 
@@ -152,5 +158,6 @@ if __name__ == "__main__":
     x_train = encode(x_train, char_dict, text_name)
 
     # Split training sequences into x and y, and one hot encode each
-    one_hots = onehot_split(x_train, size_vocab, text_name)
+    # one_hots = onehot_split(x_train, size_vocab, text_name, True, char_dict)  # Binary output
+    one_hots = onehot_split(x_train, size_vocab, text_name)  # Non-binary output
     x_train, y_train = one_hots[0], one_hots[1]

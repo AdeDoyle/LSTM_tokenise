@@ -14,7 +14,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 
 
-def tokenise(model, intext, mapping, size_vocab, buffer=0):
+def tokenise(model, intext, mapping, size_vocab, output_type, buffer=0):
     """Takes a trained language model and a text, returns the text tokenised as per the language model"""
     buffer_text = buffer * "$"
     text = buffer_text + intext
@@ -37,7 +37,7 @@ def tokenise(model, intext, mapping, size_vocab, buffer=0):
         pred = model.predict_classes(encoded, verbose=0)[0]
         # if the letter were trying to predict isn't a space in the text
         # predict a character
-        if let != " ":
+        if let != " " and output_type == "full":
             # if the prediction is not a space
             # just add the letter we were trying to predict to the outlist
             if pred != 1:
@@ -45,6 +45,15 @@ def tokenise(model, intext, mapping, size_vocab, buffer=0):
             # if the prediction is a space
             # add a space to the outlist followed by the letter that was in the text
             else:
+                outlist.append(" " + let)
+        elif let != " " and output_type == "binary":
+            # if the prediction is not a space
+            # just add the letter we were trying to predict to the outlist
+            if pred == 0:
+                outlist.append(let)
+            # if the prediction is a space
+            # add a space to the outlist followed by the letter that was in the text
+            elif pred == 1:
                 outlist.append(" " + let)
         # if the letter we're trying to predict is a space in the text
         # just append a space to the outlist
@@ -59,7 +68,7 @@ def tokenise(model, intext, mapping, size_vocab, buffer=0):
     return outtext
 
 
-def test_tzmod(model, mapping, test_set, size_vocab, buffer=0):
+def test_tzmod(model, mapping, test_set, size_vocab, output_type, buffer=0):
     edit_dists = []
     count = 0
     x_test, y_test = test_set[0], test_set[1]
@@ -68,7 +77,7 @@ def test_tzmod(model, mapping, test_set, size_vocab, buffer=0):
         count += 1
         x = x_test[x_pos]
         y = y_test[x_pos]
-        x_toks = tokenise(mod, x, mapping, size_vocab, buffer)
+        x_toks = tokenise(mod, x, mapping, size_vocab, output_type, buffer)
         e_dist = ed(y, x_toks)
         edit_dists.append(e_dist)
         # print(x)
@@ -97,12 +106,14 @@ if __name__ == "__main__":
 
     # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
 
+    mods_dir = os.getcwd() + "\\models\\clean_models"
+
     text_name_1 = "Wb. Training Glosses"
     text_designation_1 = "Wb"
     one_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
         pickle.load(open("toktrain.pkl", "rb"))))))))]
     mapping_1 = map_chars(load_data(one_text, text_name_1))
-    model_1 = "models\\clean_models\\Wb-clean, 2x75 LSTMs, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    model_1 = "Wb-clean_bi, 2x25 LSTMs, 1x45 Dense, 250 Epochs"
     char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
 
     text_name_2 = "Sg. Training Glosses"
@@ -110,32 +121,40 @@ if __name__ == "__main__":
     two_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
         load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
     mapping_2 = map_chars(load_data(two_text, text_name_2))
-    model_2 = "models\\clean_models\\Sg-clean, 2x25 LSTMs, 1 Dense, 250 Ep, No Bat, 10.0% Val"
+    model_2 = "Sg-clean_bi, 2x25 LSTMs, 1x2 Dense, 250 Epochs"
     char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
 
     allmods = [
-        [model_1, char_dict_1, size_vocab_1],
-        [model_2, char_dict_2, size_vocab_2]
+        [model_1, char_dict_1, size_vocab_1, "binary"],
+        [model_2, char_dict_2, size_vocab_2, "binary"]
     ]
 
     # allmods = list()
-    # for designation in ["Wb", "Sg"]:
+    # mod_names = os.listdir(mods_dir)
+    # wb_textname = "Wb. Training Glosses"
+    # wb_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     pickle.load(open("toktrain.pkl", "rb"))))))))]
+    # sg_textname = "Sg. Training Glosses"
+    # sg_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
+    # for mod in mod_names:
+    #     designation = mod[:2]
+    #     out_type = False
+    #     if mod[2:9] == "-clean,":
+    #         out_type = "full"
+    #     elif mod[2:12] == "-clean_bi,":
+    #         out_type = "binary"
     #     text_name = False
     #     text = False
     #     if designation == "Wb":
-    #         text_name = "Wb. Training Glosses"
-    #         text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-    #             pickle.load(open("toktrain.pkl", "rb"))))))))]
+    #         text_name = wb_textname
+    #         text = wb_text
     #     elif designation == "Sg":
-    #         text_name = "Sg. Training Glosses"
-    #         text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-    #             load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
+    #         text_name = sg_textname
+    #         text = sg_text
     #     mapping = map_chars(load_data(text, text_name))
     #     char_dict, size_vocab = mapping[0], mapping[2]
-    #     for nodes in ["25", "50", "75", "100"]:
-    #         model = f"models\\clean_models\\{designation}-clean, 2x{nodes} " \
-    #                 f"LSTMs, 1 Dense, 250 Ep, No Bat, 10.0% Val"
-    #         allmods.append([model, char_dict, size_vocab])
+    #     allmods.append([mod, char_dict, size_vocab, out_type])
 
     # Test Manually Tokenised Glosses against Untokenised Glosses
     all_ed_dists = []
@@ -156,11 +175,13 @@ if __name__ == "__main__":
     start_time = time.time()
 
     modscores = []
+    os.chdir(mods_dir)
     for mod in allmods:
         model = mod[0]
         char_dict = mod[1]
         dict_size = mod[2]
-        score = test_tzmod(model, char_dict, x_and_y_test, dict_size, 10)
+        output = mod[3]
+        score = test_tzmod(model, char_dict, x_and_y_test, dict_size, output, 10)
         print(model)
         print("    {}".format(score))
         modscores.append(score)
