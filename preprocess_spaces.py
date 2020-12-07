@@ -1,5 +1,7 @@
 
+import unidecode
 import pickle
+import re
 from conllu import parse
 from functools import reduce
 import numpy as np
@@ -23,7 +25,7 @@ def split_on_latin(glosslist):
     return split_glosslist
 
 
-def load_conllu(conllu_file):
+def load_conllu(conllu_file, superclean=False):
     with open(conllu_file, 'r', encoding="utf-8") as conllu_data:
         sentences = parse(conllu_data.read())
     gloss_list = list()
@@ -47,17 +49,50 @@ def load_conllu(conllu_file):
     gloss_list = remove_ogham(gloss_list)
     gloss_list = remove_chars(gloss_list)
     gloss_list = add_finalspace(gloss_list)
+    if superclean:
+        gloss_list = [i.lower() for i in gloss_list]
+        gloss_list = ["&".join(i.split("⁊")) for i in gloss_list]
+        gloss_list = [unidecode.unidecode(i) for i in gloss_list]
+        gloss_list = ["⁊".join(i.split("&")) for i in gloss_list]
+    print("Sg. training data loaded")
     return gloss_list
 
 
-def load_data(training_text, training_text_name):
+def load_data(superclean=False):
     """Load and combine all text data for training and testing the model"""
     x_train = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(pickle.load(open("toktrain.pkl", "rb"))))))
     test_set = pickle.load(open("toktest.pkl", "rb"))
     x_test, y_test = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(test_set[0])))), \
                      add_finalspace(remove_chars(remove_non_glosses(split_on_latin(test_set[1]))))
-    print(f"{training_text_name} loaded\nWb. Test Glosses loaded")
-    return [training_text, x_train, x_test, y_test]
+    if superclean:
+        x_train = [i.lower() for i in x_train]
+        x_test = [i.lower() for i in x_test]
+        y_test = [i.lower() for i in y_test]
+        x_train = ["&".join(i.split("⁊")) for i in x_train]
+        x_test = ["&".join(i.split("⁊")) for i in x_test]
+        y_test = ["&".join(i.split("⁊")) for i in y_test]
+        x_train = [unidecode.unidecode(i) for i in x_train]
+        x_test = [unidecode.unidecode(i) for i in x_test]
+        y_test = [unidecode.unidecode(i) for i in y_test]
+        x_train = ["⁊".join(i.split("&")) for i in x_train]
+        x_test = ["⁊".join(i.split("&")) for i in x_test]
+        y_test = ["⁊".join(i.split("&")) for i in y_test]
+        glosses = list()
+        for gloss in x_train:
+            if "[?]" in gloss:
+                breakpat = re.compile(r'\w*\[\?\]\w*')
+                breakpatiter = breakpat.findall(gloss)
+                for break_word in breakpatiter:
+                    gloss = "@".join(gloss.split(break_word))
+                gloss_splits = remove_non_glosses([i.strip() + " " for i in gloss.split("@")])
+                if gloss_splits:
+                    for sub_gloss in gloss_splits:
+                        glosses.append(sub_gloss)
+            else:
+                glosses.append(gloss)
+        x_train = [i for i in glosses]
+    print("Wb. training data loaded\nWb. test data loaded (for character mapping only)")
+    return [x_train, x_test, y_test]
 
 
 def map_chars(texts_list):
@@ -137,15 +172,18 @@ if __name__ == "__main__":
     # # Choose and name text to train on
     # text_name = "Wb. Training Glosses"
     # text_designation = "Wb"
-    # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-    #     pickle.load(open("toktrain.pkl", "rb"))))))
+    # # gloss_list = load_data()[0]  # Regular-clean
+    # gloss_list = load_data(True)[0]  # Super-clean
     text_name = "Sg. Training Glosses"
     text_designation = "Sg"
+    # gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+    #     load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))  # Regular-clean
     gloss_list = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu', True)))))  # Super-clean
 
     # Map all test and training characters
-    mappings = map_chars(load_data(gloss_list, text_name))
+    # mappings = map_chars([gloss_list] + load_data())  # Regular-clean
+    mappings = map_chars([gloss_list] + load_data(True))  # Super-clean
     char_dict, rchardict, size_vocab = mappings[0], mappings[1], mappings[2]
 
     # Set how many characters the model should look at before predicting an upcoming character

@@ -1,8 +1,7 @@
 
 import time
-import pickle
 from preprocess_data import rem_dubspace, remove_chars, remove_non_glosses, add_finalspace
-from preprocess_dual import load_conllu, map_chars, load_data, split_on_latin
+from preprocess_spaces import load_conllu, map_chars, load_data, split_on_latin
 from tokenise_dual import time_elapsed
 from nltk import edit_distance as ed
 import numpy as np
@@ -103,64 +102,71 @@ if __name__ == "__main__":
     print(f"Num GPUs Available: {len(physical_devices)}")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-    # Load test data
-    test_in = open("toktest.pkl", "rb")
-    test_set = pickle.load(test_in)
-    x_test, y_test = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(test_set[0])))),\
-                     add_finalspace(remove_chars(remove_non_glosses(split_on_latin(test_set[1]))))
+    # Load regular-cleaned test data
+    test_set = load_data()
+    wb_data = test_set[0]
+    sg_data = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))
+    x_test, y_test = test_set[1], test_set[2]
     x_and_y_test = [x_test, y_test]
 
-    # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
+    # Load super-cleaned test data
+    sc_test_set = load_data(True)
+    sc_wb_data = sc_test_set[0]
+    sc_sg_data = add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
+        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu', True)))))
+    sc_x_test, sc_y_test = sc_test_set[1], sc_test_set[2]
+    sc_x_and_y_test = [sc_x_test, sc_y_test]
 
+    # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes
     mods_dir = os.getcwd() + "\\models\\space_models"
 
-    text_name_1 = "Wb. Training Glosses"
-    text_designation_1 = "Wb"
-    one_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-        pickle.load(open("toktrain.pkl", "rb"))))))))]
-    mapping_1 = map_chars(load_data(one_text, text_name_1))
-    model_1 = "Wb-spaces_bi, 2x25 LSTMs, 1x45 Dense, 250 Epochs"
+    one_text = [rem_dubspace(" ".join(sc_wb_data))]
+    mapping_1 = map_chars([one_text] + sc_test_set)
+    model_1 = "Wb_super_spaces_bi, 2x50 LSTMs, 1x2 Dense, 250 Epochs"
     char_dict_1, rchardict_1, size_vocab_1 = mapping_1[0], mapping_1[1], mapping_1[2]
 
-    text_name_2 = "Sg. Training Glosses"
-    text_designation_2 = "Sg"
-    two_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-        load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
-    mapping_2 = map_chars(load_data(two_text, text_name_2))
-    model_2 = "Sg-spaces_bi, 2x75 LSTMs, 0x2 Dense, 250 Epochs"
+    two_text = [rem_dubspace(" ".join(sc_sg_data))]
+    mapping_2 = map_chars([two_text] + sc_test_set)
+    # model_2 = "Sg_regular_spaces_bi, 2x100 LSTMs, 1x2 Dense, 250 Epochs"
+    model_2 = "Sg_super_spaces_bi, 2x100 LSTMs, 1x28 Dense, 250 Epochs"
     char_dict_2, rchardict_2, size_vocab_2 = mapping_2[0], mapping_2[1], mapping_2[2]
 
     allmods = [
-        [model_1, char_dict_1, size_vocab_1, "binary"],
-        [model_2, char_dict_2, size_vocab_2, "binary"]
+        [model_1, char_dict_1, size_vocab_1, "binary", True],
+        [model_2, char_dict_2, size_vocab_2, "binary", True]
     ]
 
     # allmods = list()
     # mod_names = os.listdir(mods_dir)
-    # wb_textname = "Wb. Training Glosses"
-    # wb_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-    #     pickle.load(open("toktrain.pkl", "rb"))))))))]
-    # sg_textname = "Sg. Training Glosses"
-    # sg_text = [rem_dubspace(" ".join(add_finalspace(remove_chars(remove_non_glosses(split_on_latin(
-    #     load_conllu('sga_dipsgg-ud-test_combined_POS.conllu')))))))]
     # for mod in mod_names:
     #     designation = mod[:2]
-    #     out_type = False
-    #     if mod[2:10] == "-spaces,":
+    #     super_clean = False
+    #     if "super_spaces" in mod:
+    #         super_clean = True
+    #     if "_spaces," in mod:
     #         out_type = "full"
-    #     elif mod[2:13] == "-spaces_bi,":
+    #     elif "_bi," in mod:
     #         out_type = "binary"
-    #     text_name = False
+    #     else:
+    #         raise RuntimeError(f"Could not determine output for model:\n    {mod}")
     #     text = False
+    #     if super_clean:
+    #         wb_text = [rem_dubspace(" ".join(sc_wb_data))]
+    #         sg_text = [rem_dubspace(" ".join(sc_sg_data))]
+    #     else:
+    #         wb_text = [rem_dubspace(" ".join(wb_data))]
+    #         sg_text = [rem_dubspace(" ".join(sg_data))]
     #     if designation == "Wb":
-    #         text_name = wb_textname
     #         text = wb_text
     #     elif designation == "Sg":
-    #         text_name = sg_textname
     #         text = sg_text
-    #     mapping = map_chars(load_data(text, text_name))
+    #     if super_clean:
+    #         mapping = map_chars([text] + sc_test_set)
+    #     else:
+    #         mapping = map_chars([text] + test_set)
     #     char_dict, size_vocab = mapping[0], mapping[2]
-    #     allmods.append([mod, char_dict, size_vocab, out_type])
+    #     allmods.append([mod, char_dict, size_vocab, out_type, super_clean])
 
     # Test Manually Tokenised Glosses against Untokenised Glosses
     all_ed_dists = []
@@ -175,7 +181,7 @@ if __name__ == "__main__":
         # print(y)
         # print("Gloss {}/41: Edit Distance = {}".format(str(gl_count), str(ed_dist)))
     avg_ed_dist = sum(all_ed_dists) / len(all_ed_dists)
-    print("Original Gloss Score:\n    {}".format(avg_ed_dist))
+    print(f"Original Gloss Score:\n    {avg_ed_dist}")
 
     # Test Forward Models
     start_time = time.time()
@@ -187,10 +193,16 @@ if __name__ == "__main__":
         char_dict = mod[1]
         dict_size = mod[2]
         output = mod[3]
-        score = test_tzmod(model, char_dict, x_and_y_test, dict_size, output, 10)
+        superclean = mod[4]
+        if superclean:
+            testing = sc_x_and_y_test
+        else:
+            testing = x_and_y_test
         print(model)
-        print("    {}".format(score))
+        score = test_tzmod(model, char_dict, testing, dict_size, output, 10)
+        print(f"    {score}")
         modscores.append(score)
+    modscores = [i for i in modscores if i != avg_ed_dist]
     best_score = min(modscores)
     print(f"Best Model:\n    {allmods[modscores.index(best_score)][0]}")
 
