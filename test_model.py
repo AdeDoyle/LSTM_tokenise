@@ -1,7 +1,7 @@
 
 import time
 import pickle
-from preprocess_data import load_conllu, rem_dubspace, map_chars, load_data
+from preprocess_data import load_conllu, rem_dubspace, map_chars, load_data, remove_chars
 from tokenise import time_elapsed
 from nltk import edit_distance as ed
 import numpy as np
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # Load test data
     test_in = open("toktest.pkl", "rb")
     test_set = pickle.load(test_in)
-    x_test, y_test = test_set[0], test_set[1]
+    x_test, y_test = remove_chars(test_set[0]), remove_chars(test_set[1])
     x_and_y_test = [x_test, y_test]
 
     # Identify models to test, with their appropriate character conversion dictionaries and dictionary sizes

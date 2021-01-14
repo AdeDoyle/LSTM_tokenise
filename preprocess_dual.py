@@ -23,6 +23,30 @@ def split_on_latin(glosslist):
     return split_glosslist
 
 
+def split_return_latin(glosslist):
+    split_glosslist = list()
+    indices = list()
+    place_count = 0
+    for gloss in glosslist:
+        if "*Latin*" in gloss:
+            split_list = gloss.split("*Latin*")
+            for split_gloss in split_list:
+                split_glosslist.append(split_gloss.strip())
+            end_place = place_count + len(split_list)
+            indices.append([place_count, end_place])
+            place_count = end_place
+        else:
+            split_glosslist.append(gloss)
+            indices.append([place_count, place_count + 1])
+            place_count += 1
+    return [split_glosslist, indices]
+
+
+def repair_split_latin(split_glosslist, indices):
+    repaired_list = [" *Latin* ".join(split_glosslist[i[0]:i[1]]).strip() for i in indices]
+    return repaired_list
+
+
 def load_conllu(conllu_file):
     with open(conllu_file, 'r', encoding="utf-8") as conllu_data:
         sentences = parse(conllu_data.read())

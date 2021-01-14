@@ -20,11 +20,12 @@ def remove_ogham(glosslist):
 
 
 def remove_chars(glosslist):
-    unexpected_chars = [',', '̃', '֊']
+    unexpected_chars = [',', '̃', '֊', '?']
     for odd_char in unexpected_chars:
         for g, gloss in enumerate(glosslist):
             if odd_char in gloss:
                 glosslist[g] = "".join(gloss.split(odd_char))
+    glosslist = [i for i in glosslist if i]
     return glosslist
 
 
